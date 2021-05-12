@@ -24,16 +24,37 @@ impl MultivariateRegression{
     fn fit(&mut self, epochs: i32){
         for iter in 0..epochs{
 
-            //Predict values 
-            let y_hat_i : Vec<Vec<f64>> = self.x.iter().map(|y| y.iter().zip(&self.weights).map(|(w, z)| (w * z)).collect()).collect();
-            let y_hat : Vec<i32> = y_hat_i.iter().map(|y| y.iter().sum::<f64>() + self.bias).collect();
+            let mut temp_bias = 0f64;
 
-            //let dw = y_hat.iter().zip(self.y).map(|(x, y)| (x - y))
+            let mut temp_weights : Vec<f64> = Vec::with_capacity(self.weights.len());
+            for i in 0..temp_weights.len(){
+                temp_weights[i] = 0f64;
+            }
+
+            for x_row_i in 0..self.x.len(){
+
+                //Make our prediction based on weights
+                let mut y_hat : f64 = self.bias;
+                for i_weight in 0..self.weights.len(){
+                    y_hat += self.weights[i_weight] * self.x[x_row_i][i_weight];
+                }
+
+                //Calculate derivatives of weights and bias
+                for i_weight in 0..self.weights.len(){
+                    temp_weights[i_weight] += (y_hat - self.y[x_row_i]) * self.x[x_row_i][i_weight];
+                }
+            
+                temp_bias += y_hat - self.y[x_row_i];
+
+            }
+
+            //Update weights
+            for weight_u in 0..self.weights.len(){
+                self.weights[weight_u] = self.weights[weight_u] - self.learning_rate * (1 / (2 * self.x[0].len())  ) as f64 * temp_weights[weight_u];
+            }
+
+            self.bias = self.bias - self.learning_rate * (1 / (2 * self.x[0].len())  ) as f64 * temp_bias;
 
         }
     }
-}
-
-fn main(){
-
 }
